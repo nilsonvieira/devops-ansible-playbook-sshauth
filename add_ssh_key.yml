@@ -1,0 +1,34 @@
+---
+- name: Add SSH key to authorized_keys
+  hosts: k8s
+  become: yes
+  tasks:
+    - name: Ensure .ssh directory exists
+      file:
+        path: /root/.ssh
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Copy SSH public key to authorized_keys
+      copy:
+        src: /home/{usuario}/.ssh/id_rsa.pub
+        dest: /root/.ssh/authorized_keys
+        owner: root
+        group: root
+        mode: '0600'
+        force: yes
+      register: copy_result
+
+    - name: Display a message if the key was added
+      debug:
+        msg: "SSH key was added to authorized_keys."
+      when: copy_result.changed
+
+    - name: Ensure permissions on authorized_keys
+      file:
+        path: /root/.ssh/authorized_keys
+        mode: '0600'
+        owner: root
+        group: root
